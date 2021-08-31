@@ -1,9 +1,16 @@
 package com.ab.flink;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FilterFunction;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.util.NumberSequenceIterator;
+
+import java.util.Properties;
 
 /**
  * @description:
@@ -14,6 +21,25 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 public class sourceSourceApp {
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        test2(env);
+    }
+    public static void test3(StreamExecutionEnvironment env) {
+        KafkaSource<String> source = KafkaSource.<String>builder()
+                .setBootstrapServers("myhost:9092")
+                .setTopics("input-topic")
+                .setGroupId("my-group")
+                .setStartingOffsets(OffsetsInitializer.earliest())
+                .setValueOnlyDeserializer(new SimpleStringSchema())
+                .build();
+
+        DataStreamSource<String> streamSource = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        System.out.println("kafka parallelism:" + streamSource.getParallelism());
+        streamSource.print();
+
+
+    }
+
+    public static void test1(StreamExecutionEnvironment env) {
         DataStreamSource<String> source = env.socketTextStream("myhost", 9527);
         int sourceParallelism = source.getParallelism();//获取并行度
         System.out.println(sourceParallelism);
@@ -25,5 +51,20 @@ public class sourceSourceApp {
         });
         int parallelism = filter.getParallelism();
         System.out.println(parallelism);
+    }
+
+    public static void test2(StreamExecutionEnvironment env) {
+        DataStreamSource<Long> source = env.fromParallelCollection(new NumberSequenceIterator(1, 10), Long.class);
+        System.out.println("source:"+source.getParallelism());
+        SingleOutputStreamOperator<Long> filter = source.filter(new FilterFunction<Long>() {
+            @Override
+            public boolean filter(Long value) throws Exception {
+                return value > 5;
+            }
+        });
+        System.out.println("filter:" + filter.getParallelism());
+        filter.print();
+
+
     }
 }
