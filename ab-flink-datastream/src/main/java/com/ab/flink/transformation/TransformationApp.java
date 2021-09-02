@@ -1,9 +1,12 @@
 package com.ab.flink.transformation;
 
+import org.apache.commons.math3.geometry.enclosing.EnclosingBall;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -19,10 +22,44 @@ public class TransformationApp {
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        keyBy(env);
+        richMap(env);
         env.execute("TransformationApp");
     }
 
+    public static void richMap(StreamExecutionEnvironment env) {
+        env.setParallelism(1);
+        DataStreamSource<String> streamSource = env.readTextFile("data/access.log");
+        SingleOutputStreamOperator<Access> map = streamSource.map(new MyRichMapFunction());
+        map.print();
+    }
+
+    public static void reduce(StreamExecutionEnvironment env) {
+        DataStreamSource<String> streamSource = env.socketTextStream("myhost", 9527);
+        streamSource.flatMap(new FlatMapFunction<String, String>() {
+            @Override
+            public void flatMap(String value, Collector<String> out) throws Exception {
+                for (String s : value.split(",")) {
+                    out.collect(s);
+                }
+            }
+        }).map(new MapFunction<String, Tuple2<String, Integer>>() {
+            @Override
+            public Tuple2<String, Integer> map(String value) throws Exception {
+                return Tuple2.of(value, 1);
+            }
+        }).keyBy(value -> value.f0)
+                .reduce(new ReduceFunction<Tuple2<String, Integer>>() {
+            @Override
+            public Tuple2<String, Integer> reduce(Tuple2<String, Integer> value1, Tuple2<String, Integer> value2) throws Exception {
+                return Tuple2.of(value1.f0, value1.f1 + value2.f1);
+            }
+        }).print();
+    }
+
+    /**
+     * 类似group by操作
+     * @param env
+     */
     public static void keyBy(StreamExecutionEnvironment env) {
         DataStreamSource<String> streamSource = env.readTextFile("data/access.log");
         SingleOutputStreamOperator<Access> map = streamSource.map(new MapFunction<String, Access>() {

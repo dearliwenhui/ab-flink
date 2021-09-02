@@ -1,5 +1,6 @@
-package com.ab.flink;
+package com.ab.flink.source;
 
+import com.ab.flink.transformation.Access;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
@@ -18,11 +19,17 @@ import java.util.Properties;
  * @author: liwenhui
  * @createTime: 2021-08-30 22:41
  **/
-public class sourceSourceApp {
+public class SourceSourceApp {
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        test2(env);
+        defineStreamSource1(env);
     }
+
+    public static void defineStreamSource1(StreamExecutionEnvironment env) {
+        DataStreamSource<Access> accessDataStreamSource = env.addSource(new AccessSource());
+        accessDataStreamSource.print();
+    }
+
     public static void test3(StreamExecutionEnvironment env) {
         KafkaSource<String> source = KafkaSource.<String>builder()
                 .setBootstrapServers("myhost:9092")
