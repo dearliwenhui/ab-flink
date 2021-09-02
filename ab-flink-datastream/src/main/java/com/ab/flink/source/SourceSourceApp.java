@@ -20,9 +20,10 @@ import java.util.Properties;
  * @createTime: 2021-08-30 22:41
  **/
 public class SourceSourceApp {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         defineStreamSource1(env);
+        env.execute("SourceSourceApp");
     }
 
     public static void defineStreamSource1(StreamExecutionEnvironment env) {
