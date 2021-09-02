@@ -2,6 +2,7 @@ package com.ab.flink.source;
 
 import com.ab.flink.transformation.Access;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.flink.streaming.api.functions.source.ParallelSourceFunction;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
 import java.util.concurrent.TimeUnit;
@@ -12,15 +13,16 @@ import java.util.concurrent.TimeUnit;
  * @author: Dave.Li
  * @createTime: 2021-09-02 17:38
  **/
-public class AccessSource implements SourceFunction<Access> {
+public class ParallAccessSource implements ParallelSourceFunction<Access> {
     @Override
     public void run(SourceContext<Access> ctx) throws Exception {
         String[] domains = {"a.com", "b.com", "c.com"};
         while (true) {
-            //此处会运行10次
+            //此处会同时运行parallelism*10次
             for (int i = 0; i < 10; i++) {
                 Access access = new Access(RandomUtils.nextLong(100000, 999999), domains[RandomUtils.nextInt(0, 3)], RandomUtils.nextLong(100, 10000));
                 ctx.collect(access);
+
             }
             TimeUnit.SECONDS.sleep(5);
         }

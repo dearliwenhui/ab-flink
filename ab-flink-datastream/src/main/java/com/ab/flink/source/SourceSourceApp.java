@@ -22,8 +22,14 @@ import java.util.Properties;
 public class SourceSourceApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        defineStreamSource1(env);
+        parallelismDefineStreamSource(env);
         env.execute("SourceSourceApp");
+    }
+
+    public static void parallelismDefineStreamSource(StreamExecutionEnvironment env) {
+        DataStreamSource<Access> accessDataStreamSource = env.addSource(new ParallAccessSource());
+        accessDataStreamSource.setParallelism(2);
+        accessDataStreamSource.print();
     }
 
     public static void defineStreamSource1(StreamExecutionEnvironment env) {
