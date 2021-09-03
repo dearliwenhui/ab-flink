@@ -7,6 +7,7 @@ import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.streaming.api.datastream.ConnectedStreams;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -22,8 +23,20 @@ public class TransformationApp {
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        richMap(env);
+        coMap(env);
         env.execute("TransformationApp");
+    }
+
+    public static void coMap(StreamExecutionEnvironment env) {
+        DataStreamSource<String> streamSource1 = env.socketTextStream("myhost", 9527);
+        DataStreamSource<String> streamSource2 = env.socketTextStream("myhost", 9528);
+        ConnectedStreams<String, String> connect = streamSource1.connect(streamSource2);
+
+    }
+
+    public static void union(StreamExecutionEnvironment env) {
+        DataStreamSource<String> streamSource1 = env.socketTextStream("myhost", 9527);
+        streamSource1.union(streamSource1).print();
     }
 
     public static void richMap(StreamExecutionEnvironment env) {
