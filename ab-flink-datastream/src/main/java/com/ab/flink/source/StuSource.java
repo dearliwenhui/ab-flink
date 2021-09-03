@@ -17,7 +17,7 @@ public class StuSource extends RichSourceFunction {
 
     @Override
     public void run(SourceContext ctx) throws Exception {
-
+        System.out.println();
     }
 
     @Override
