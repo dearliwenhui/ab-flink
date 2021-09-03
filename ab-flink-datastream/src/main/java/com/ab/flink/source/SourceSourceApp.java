@@ -22,8 +22,14 @@ import java.util.Properties;
 public class SourceSourceApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        parallelismDefineStreamSource(env);
+        richSourceFunction(env);
         env.execute("SourceSourceApp");
+    }
+
+    public static void richSourceFunction(StreamExecutionEnvironment env) {
+        DataStreamSource<Stu> dataStreamSource = env.addSource(new StuSource());
+        System.out.println(dataStreamSource.getParallelism());
+        dataStreamSource.print();
     }
 
     public static void parallelismDefineStreamSource(StreamExecutionEnvironment env) {
