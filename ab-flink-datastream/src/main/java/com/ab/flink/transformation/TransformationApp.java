@@ -11,6 +11,8 @@ import org.apache.flink.streaming.api.datastream.ConnectedStreams;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction;
+import org.apache.flink.streaming.api.functions.co.CoMapFunction;
 import org.apache.flink.util.Collector;
 
 /**
@@ -23,15 +25,51 @@ public class TransformationApp {
 
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        coMap(env);
+        coFlatmap(env);
         env.execute("TransformationApp");
+    }
+
+    public static void coFlatmap(StreamExecutionEnvironment env) {
+        DataStreamSource<String> stream1 = env.fromElements("a b c", "e f g");
+        DataStreamSource<String> stream2 = env.fromElements("1,2,3", "4,5,6");
+        stream1.connect(stream2).flatMap(new CoFlatMapFunction<String, String, String>() {
+            @Override
+            public void flatMap1(String value, Collector<String> out) throws Exception {
+                for (String s : value.split(" ")) {
+                    out.collect(s);
+                }
+            }
+
+            @Override
+            public void flatMap2(String value, Collector<String> out) throws Exception {
+                for (String s : value.split(",")) {
+                    out.collect(s);
+                }
+            }
+        }).print();
     }
 
     public static void coMap(StreamExecutionEnvironment env) {
         DataStreamSource<String> streamSource1 = env.socketTextStream("myhost", 9527);
-        DataStreamSource<String> streamSource2 = env.socketTextStream("myhost", 9528);
-        ConnectedStreams<String, String> connect = streamSource1.connect(streamSource2);
+        SingleOutputStreamOperator<Integer> stream2 = env.socketTextStream("myhost", 9528).map(new MapFunction<String, Integer>() {
+            @Override
+            public Integer map(String value) throws Exception {
+                return Integer.valueOf(value);
+            }
+        });
+        ConnectedStreams<String, Integer> connect = streamSource1.connect(stream2);
+        connect.map(new CoMapFunction<String, Integer, String>() {
 
+            @Override
+            public String map1(String value) throws Exception {
+                return value.toUpperCase();
+            }
+
+            @Override
+            public String map2(Integer value) throws Exception {
+                return String.valueOf(value * 10);
+            }
+        }).print();
     }
 
     public static void union(StreamExecutionEnvironment env) {

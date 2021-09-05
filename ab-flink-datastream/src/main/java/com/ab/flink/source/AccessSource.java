@@ -16,14 +16,14 @@ public class AccessSource implements SourceFunction<Access> {
     @Override
     public void run(SourceContext<Access> ctx) throws Exception {
         String[] domains = {"a.com", "b.com", "c.com"};
-        while (true) {
+//        while (true) {
             //此处会运行10次
             for (int i = 0; i < 10; i++) {
                 Access access = new Access(RandomUtils.nextLong(100000, 999999), domains[RandomUtils.nextInt(0, 3)], RandomUtils.nextLong(100, 10000));
                 ctx.collect(access);
             }
             TimeUnit.SECONDS.sleep(5);
-        }
+//        }
     }
 
     @Override
