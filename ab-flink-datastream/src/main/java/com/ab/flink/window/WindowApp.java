@@ -20,10 +20,25 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 public class WindowApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        test03(env);
+        test04(env);
         env.execute("WindowApp");
     }
 
+    /**
+     * reduce 求和
+     * @param env
+     */
+    public static void test04(StreamExecutionEnvironment env) {
+        env.socketTextStream("myhost", 9527)
+                .map(value -> {
+                    String[] split = value.split(",");
+                    return Tuple2.of(split[0], Integer.valueOf(split[1]));
+                }).returns(Types.TUPLE(Types.STRING, Types.INT))
+                .keyBy(value -> value.f0)
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
+                .reduce((value1, value2) -> Tuple2.of(value1.f0, value1.f1 + value2.f1)).print();
+
+    }
 
     /**
      * 不分组，老版本运行方式 < 1.12
