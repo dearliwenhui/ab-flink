@@ -20,9 +20,24 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 public class WindowApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        test04(env);
+        test05(env);
         env.execute("WindowApp");
     }
+
+    /**
+     * define window function for calc max value
+     * 将数据放到buff中,最后输出
+     */
+    public static void test05(StreamExecutionEnvironment env) {
+        env.socketTextStream("myhost", 9527)
+                .map(value -> Tuple2.of("a", Integer.valueOf(value)))
+                .returns(Types.TUPLE(Types.STRING,Types.INT))
+                .keyBy(value -> value.f0)
+                .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
+                .process(new MyProcessWindowFunction())
+                .print();
+    }
+
 
     /**
      * reduce 求和
