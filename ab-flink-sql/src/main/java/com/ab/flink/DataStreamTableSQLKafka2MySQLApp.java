@@ -18,12 +18,13 @@ public class DataStreamTableSQLKafka2MySQLApp {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
-        String kafkaConnector="CREATE TABLE KafkaTable (" +
-                "  `id` STRING" +
+        String kafkaConnector = "CREATE TABLE KafkaTable (" +
+                "  `id` BIGINT," +
+                "    name STRING" +
                 ") WITH (" +
                 "  'connector' = 'kafka'," +
-                "  'topic' = 'RTS_WTCTW_REFUND'," +
-                "  'properties.bootstrap.servers' = '10.95.35.76:33100,10.95.35.77:33102,10.95.35.78:33101'," +
+                "  'topic' = 'flink'," +
+                "  'properties.bootstrap.servers' = '106.75.171.152:9092'," +
                 "  'properties.group.id' = 'testGroup'," +
                 "  'scan.startup.mode' = 'earliest-offset'," +
                 "  'format' = 'json'" +
@@ -31,18 +32,19 @@ public class DataStreamTableSQLKafka2MySQLApp {
         tableEnv.executeSql(kafkaConnector);
 
         String jdbcConnector = "CREATE TABLE MyData  (" +
-                "    id STRING" +
+                "    id BIGINT," +
+                "    name STRING" +
                 ") WITH (" +
                 "   'connector' = 'jdbc'," +
-                "   'url' = 'jdbc:mysql://myhost:3306/mall666'," +
-                "   'table-name' = 'flink'," +
+                "   'url' = 'jdbc:mysql://myhost:3306/flink'," +
+                "   'table-name' = 'person'," +
                 "    'username' = 'root'," +
                 "    'password' = '1qaz!QAZ2wsx@WSX'" +
                 ")";
         tableEnv.executeSql(jdbcConnector);
 
 
-        tableEnv.executeSql("insert into MyData select id from KafkaTable");
+        tableEnv.executeSql("insert into MyData select id,name from KafkaTable");
 //        Table table = tableEnv.sqlQuery("select id from KafkaTable");
 //        tableEnv.toDataStream(table, Row.class).print("print:::");
 //        env.execute("DataStreamTableSQLKafka2MySQLApp");

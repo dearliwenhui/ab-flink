@@ -31,7 +31,7 @@ public class WindowApp {
     public static void test05(StreamExecutionEnvironment env) {
         env.socketTextStream("myhost", 9527)
                 .map(value -> Tuple2.of("a", Integer.valueOf(value)))
-                .returns(Types.TUPLE(Types.STRING,Types.INT))
+                .returns(Types.TUPLE(Types.STRING,Types.INT)).rescale()
                 .keyBy(value -> value.f0)
                 .window(TumblingProcessingTimeWindows.of(Time.seconds(5)))
                 .process(new MyProcessWindowFunction())
